@@ -1,5 +1,7 @@
 import os
 import sys
+import subprocess
+import threading
 
 from app.gui import App
 
@@ -25,7 +27,14 @@ if __name__ == '__main__':
 
     class LiveApp(App):
         def __init__(self):
-            super(LiveApp, self).__init__('Live')
+            menu = None
+            super(LiveApp, self).__init__('Live', menu=menu)
+            self.mpv_thread = threading.Thread(target=self.start_mpv, name="MPV_THREAD")
+            self.mpv_thread.start()
+
+        def start_mpv(self):
+            spc = subprocess.Popen([set_mpv_default_path(), 'http://notag.cn/live/macast_live.m3u8'])
+            spc.communicate()
 
 
     LiveApp().start()

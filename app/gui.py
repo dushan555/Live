@@ -17,14 +17,15 @@ class App:
 
     def _build_menu_rumps(self, menu):
         items = []
-        for item in menu:
-            if item is None:
-                items.append(None)
-            elif item.children is not None:
-                menu_item = rumps.MenuItem(item.text)
-                items.append([menu_item, self._build_menu_rumps(item.children)])
-            else:
-                items.append(self._build_menu_item_rumps(item))
+        if menu:
+            for item in menu:
+                if item is None:
+                    items.append(None)
+                elif item.children is not None:
+                    menu_item = rumps.MenuItem(item.text)
+                    items.append([menu_item, self._build_menu_rumps(item.children)])
+                else:
+                    items.append(self._build_menu_item_rumps(item))
         return items
 
     def _build_menu_item_rumps(self, item):
