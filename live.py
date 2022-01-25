@@ -3,6 +3,8 @@ import sys
 import subprocess
 import threading
 
+import rumps
+
 from app.gui import App
 
 
@@ -23,18 +25,25 @@ def set_mpv_default_path():
     return mpv_path
 
 
-if __name__ == '__main__':
+class LiveApp(rumps.App):
+    def __init__(self):
+        super(LiveApp, self).__init__('Live', icon=get_base_path('app/assets/icon.png'))
+        self.mpv_thread = None
 
-    class LiveApp(App):
-        def __init__(self):
-            menu = None
-            super(LiveApp, self).__init__('Live', menu=menu)
+    def start_live(self):
+        if self.mpv_thread is None or self.mpv_thread.is_alive() is False:
             self.mpv_thread = threading.Thread(target=self.start_mpv, name="MPV_THREAD")
             self.mpv_thread.start()
 
-        def start_mpv(self):
-            spc = subprocess.Popen([set_mpv_default_path(), 'http://notag.cn/live/macast_live.m3u8'])
-            spc.communicate()
+    @rumps.clicked("Start")
+    def prefs(self, _):
+        self.start_live()
+
+    @staticmethod
+    def start_mpv():
+        spc = subprocess.Popen([set_mpv_default_path(), 'http://notag.cn/live/macast_live.m3u8'])
+        spc.communicate()
 
 
-    LiveApp().start()
+if __name__ == '__main__':
+    LiveApp().run()

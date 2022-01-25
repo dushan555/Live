@@ -7,7 +7,7 @@ class App:
         icon_path = self.get_base_path('assets/icon.png')
         self.name = name
         self.menu = menu
-        self.app = rumps.App(self.name, icon=icon_path, menu=self._build_menu_rumps(self.menu))
+        self.app = rumps.App(self.name, icon=icon_path, menu=self.menu)
 
     def start(self):
         self.app.run()
@@ -91,6 +91,7 @@ class MenuItem:
 
     def _rumpsCallback(self, item):
         self.callback(self)
+
 
 if __name__ == "__main__":
     print('gui main')
