@@ -5,7 +5,7 @@ import threading
 
 import rumps
 
-from app.gui import App
+import app.gui
 
 
 def get_base_path(path="."):
@@ -27,7 +27,7 @@ def set_mpv_default_path():
 
 class LiveApp(rumps.App):
     def __init__(self):
-        super(LiveApp, self).__init__('Live', icon=get_base_path('app/assets/icon.png'))
+        super(LiveApp, self).__init__('Live', icon=app.gui.icon_path)
         self.mpv_thread = None
 
     def start_live(self):

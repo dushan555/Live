@@ -2,9 +2,16 @@ import rumps
 import os
 
 
+def get_base_path(path='.'):
+    b = os.path.join(os.path.dirname(__file__), path)
+    return b
+
+
+icon_path = get_base_path('assets/icon.png')
+
+
 class App:
     def __init__(self, name, menu):
-        icon_path = self.get_base_path('assets/icon.png')
         self.name = name
         self.menu = menu
         self.app = rumps.App(self.name, icon=icon_path, menu=self.menu)
@@ -34,11 +41,6 @@ class App:
         menu_item.state = 1 if item.checked else 0
         item.view = menu_item
         return menu_item
-
-    @staticmethod
-    def get_base_path(path='.'):
-        b = os.path.join(os.path.dirname(__file__), path)
-        return b
 
 
 class MenuItem:
