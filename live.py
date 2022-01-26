@@ -2,8 +2,29 @@ import os
 import sys
 import subprocess
 import threading
+from enum import Enum
 
-import rumps
+
+class Platform(Enum):
+    Darwin = 0
+    Win32 = 1
+    Linux = 2
+
+
+platform = None
+if sys.platform == 'darwin':
+    platform = Platform.Darwin
+elif sys.platform == 'win32':
+    platform = Platform.Win32
+elif sys.platform == 'linux':
+    platform == Platform.Linux
+
+if platform is Platform.Darwin:
+    import rumps
+else:
+    from pystray import Menu, MenuItem, Icon
+    from PIL import Image
+
 
 import app.gui
 
@@ -25,19 +46,46 @@ def set_mpv_default_path():
     return mpv_path
 
 
-class LiveApp(rumps.App):
+if platform is Platform.Darwin:
+    class App(rumps.App):
+        def __init__(self):
+            super(LiveApp, self).__init__('Live', icon=app.gui.icon_path)
+
+        @rumps.clicked("Start")
+        def prefs(self, _):
+            self.start_live()
+
+        def start_live(self):
+            pass
+
+        def start(self):
+            super(App, self).run()
+else:
+    class App:
+        def __init__(self):
+            print('App init')
+            image = Image.open(app.gui.icon_path)
+            self.app = Icon('Live', icon=image, menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit_live)))
+
+        def start_live(self, icon, item):
+            pass
+
+        def quit_live(self):
+            self.app.stop()
+
+        def start(self):
+            self.app.run()
+
+
+class LiveApp(App):
     def __init__(self):
-        super(LiveApp, self).__init__('Live', icon=app.gui.icon_path)
+        super(LiveApp, self).__init__()
         self.mpv_thread = None
 
     def start_live(self):
         if self.mpv_thread is None or self.mpv_thread.is_alive() is False:
             self.mpv_thread = threading.Thread(target=self.start_mpv, name="MPV_THREAD")
             self.mpv_thread.start()
-
-    @rumps.clicked("Start")
-    def prefs(self, _):
-        self.start_live()
 
     @staticmethod
     def start_mpv():
@@ -46,4 +94,4 @@ class LiveApp(rumps.App):
 
 
 if __name__ == '__main__':
-    LiveApp().run()
+    LiveApp().start()
