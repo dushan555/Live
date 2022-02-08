@@ -25,8 +25,15 @@ else:
     from pystray import Menu, MenuItem, Icon
     from PIL import Image
 
-
 import app.gui
+import requests
+
+LIVE_PATH = os.path.join('live.m3u8')
+
+if not os.path.exists(LIVE_PATH):
+    r = requests.get('http://notag.cn/live/macast_live.m3u8')
+    with open(LIVE_PATH, 'wb') as f:
+        f.write(r.content)
 
 
 def get_base_path(path="."):
@@ -49,7 +56,7 @@ def set_mpv_default_path():
 if platform is Platform.Darwin:
     class App(rumps.App):
         def __init__(self):
-            super(LiveApp, self).__init__('Live', icon=app.gui.icon_path)
+            super(App, self).__init__('Live', icon=app.gui.icon_path)
 
         @rumps.clicked("Start")
         def prefs(self, _):
@@ -65,7 +72,8 @@ else:
         def __init__(self):
             print('App init')
             image = Image.open(app.gui.icon_path)
-            self.app = Icon('Live', icon=image, menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit_live)))
+            self.app = Icon('Live', icon=image,
+                            menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit_live)))
 
         def start_live(self, icon, item):
             pass
@@ -89,7 +97,8 @@ class LiveApp(App):
 
     @staticmethod
     def start_mpv():
-        spc = subprocess.Popen([set_mpv_default_path(), 'http://notag.cn/live/macast_live.m3u8'])
+        params = [set_mpv_default_path(), '--geometry=80%:5%', '--autofit=30%', '--force-window=yes', '--playlist-start=0', '--playlist='+LIVE_PATH]
+        spc = subprocess.Popen(params)
         spc.communicate()
 
 
