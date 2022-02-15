@@ -1,32 +1,10 @@
-import os
-import sys
+import json
 import subprocess
 import threading
-from enum import Enum
+import socket
 
-
-class Platform(Enum):
-    Darwin = 0
-    Win32 = 1
-    Linux = 2
-
-
-platform = None
-if sys.platform == 'darwin':
-    platform = Platform.Darwin
-elif sys.platform == 'win32':
-    platform = Platform.Win32
-elif sys.platform == 'linux':
-    platform == Platform.Linux
-
-if platform is Platform.Darwin:
-    import rumps
-else:
-    from pystray import Menu, MenuItem, Icon
-    from PIL import Image
-
-import app.gui
 import requests
+from app.gui import *
 
 LIVE_PATH = os.path.join('live.m3u8')
 
@@ -53,51 +31,65 @@ def set_mpv_default_path():
     return mpv_path
 
 
-if platform is Platform.Darwin:
-    class App(rumps.App):
-        def __init__(self):
-            super(App, self).__init__('Live', icon=app.gui.icon_path)
-
-        @rumps.clicked("Start")
-        def prefs(self, _):
-            self.start_live()
-
-        def start_live(self):
-            pass
-
-        def start(self):
-            super(App, self).run()
-else:
-    class App:
-        def __init__(self):
-            print('App init')
-            image = Image.open(app.gui.icon_path)
-            self.app = Icon('Live', icon=image,
-                            menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit_live)))
-
-        def start_live(self, icon, item):
-            pass
-
-        def quit_live(self):
-            self.app.stop()
-
-        def start(self):
-            self.app.run()
-
-
 class LiveApp(App):
     def __init__(self):
         super(LiveApp, self).__init__()
         self.mpv_thread = None
+        self.ipc_thread = None
+        self.mpvsocket = '/tmp/mpvsocket'
+        self.ipc = None
+        self.start_live()
+
+    def close(self):
+        self.send_command(['quit'])
 
     def start_live(self):
         if self.mpv_thread is None or self.mpv_thread.is_alive() is False:
             self.mpv_thread = threading.Thread(target=self.start_mpv, name="MPV_THREAD")
             self.mpv_thread.start()
+        time.sleep(0.5)
+        if self.ipc_thread is None or self.ipc_thread.is_alive() is False:
+            self.ipc_thread = threading.Thread(target=self.start_ipc, name="IPC_THREAD")
+            self.ipc_thread.start()
 
-    @staticmethod
-    def start_mpv():
-        params = [set_mpv_default_path(), '--geometry=80%:5%', '--autofit=30%', '--force-window=yes', '--playlist-start=0', '--playlist='+LIVE_PATH]
+    def send_msg(self, msg):
+        if self.ipc is not None:
+            self.ipc.sendall(msg.encode())
+
+    def send_command(self, command):
+        data = {"command": command}
+        msg = json.dumps(data) + '\n'
+        self.send_msg(msg)
+
+    def start_ipc(self):
+        if self.mpv_thread.is_alive and self.ipc_thread.is_alive():
+            self.ipc = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.ipc.connect(self.mpvsocket)
+            self.send_command(['loadlist', LIVE_PATH])
+            while True:
+                try:
+                    data = self.ipc.recv(1048576)
+                    if data == b'':
+                        break
+                    print('recv:', data)
+                except Exception as e:
+                    print('excep:', e)
+                    break
+            self.ipc.close()
+            self.ipc = None
+
+    def start_mpv(self):
+        params = [
+            set_mpv_default_path(),
+            '--no-config',
+            '--no-input-default-bindings',
+            '--geometry=80%:0%', '--autofit=30%',
+            '--idle',
+            '--force-window=yes',
+            '--osc=no',
+            '--input-ipc-server=' + self.mpvsocket,
+            '--script=' + script_path,
+        ]
         spc = subprocess.Popen(params)
         spc.communicate()
 
