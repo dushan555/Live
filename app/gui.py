@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 from enum import Enum
 
 
@@ -47,7 +46,6 @@ if platform is Platform.Darwin:
 
         @rumps.clicked("Quit")
         def Quit(self, _):
-            self.close()
             rumps.quit_application()
 
         def start_live(self):
@@ -56,8 +54,6 @@ if platform is Platform.Darwin:
         def start(self):
             super(App, self).run()
 
-        def close(self):
-            pass
 else:
     class App:
         def __init__(self):
@@ -69,14 +65,11 @@ else:
             pass
 
         def quit_live(self):
-            self.close()
             self.app.stop()
 
         def start(self):
             self.app.run()
 
-        def close(self):
-            pass
 
 if __name__ == "__main__":
     print('gui main')
