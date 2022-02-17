@@ -1,36 +1,96 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: Build application
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      ssh_darwin:
+        desc: 'SSH connection to Darwin'
+        required: false
+        default: 'false'
+      release:
+        desc: 'Push a new release'
+        required: false
+        default: 'false'
 
 jobs:
-  build:
-
+  release:
+    needs: [build-darwin]
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - name: GetInfo
+        run: |
+          ls -R
+          export VERSION=`cat app/.version`
+          echo "VERSION=v$VERSION" >> $GITHUB_ENV
+          echo "DIST_DMG=Live-MacOS-v${VERSION}.dmg" >> $GITHUB_ENV
+          echo "DIST_EXE=Live-Windows-v${VERSION}.exe" >> $GITHUB_ENV
+          echo "DIST_ARM64_DEB=Live-Linux-v${VERSION}-amd64.deb" >> $GITHUB_ENV
+          echo $GITHUB_ENV
+
+      - name: Upload
+        if: github.event.inputs.release == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          name: Live ${{ env.VERSION}}
+          tag: ${{ env.VERSION}}
+          omitBodyDuringUpdate: true
+          body: The release is built by github-action.
+          token: ${{ secrets.GITHUB_TOKEN}}
+          allowUpdates: true
+          artifacts: ${{ env.DIST_DMG }}/${{ env.DIST_DMG }}
+          #,${{ env.DIST_EXE }}/${{ env.DIST_EXE }},${{ env.DIST_ARM64_DEB }}/${{ env.DIST_ARM64_DEB }}
+
+  build-darwin:
+    runs-on: macos-11
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: install create-dmg
+        run: brew install create-dmg
+        
+      - name: install python
+        run: |
+          wget https://www.python.org/ftp/python/3.9.8/python-3.9.8-macos11.pkg
+          sudo installer -pkg python-3.9.8-macos11.pkg -target /
+
+      - name: install requirement
+        run: |
+          pip3 install -r requirements_darwin.txt
+          pip install py2app
+          wget https://laboratory.stolendata.net/~djinn/mpv_osx/mpv-latest.tar.gz
+          mkdir -p bin && tar --strip-components 2 -C bin -xzvf mpv-latest.tar.gz mpv.app/Contents/MacOS
+          
+      - name: Build
+        id: compile
+        run: |
+          python3 setup_py2app.py py2app --arch=x86_64
+          cp -R bin dist/live.app/Contents/Resources/
+          export VERSION=`cat app/.version`
+          echo "DIST_DMG=Live-MacOS-v${VERSION}.dmg" >> $GITHUB_ENV
+          echo "VERSION=v${VERSION}" >> $GITHUB_ENV
+          create-dmg --window-pos 200 200 --window-size 800 500 --icon-size 100 --icon "live.app" 200 200  --hide-extension "live.app" --app-drop-link 560 200  --volname "Live-v${VERSION} Installer" Live-MacOS-v${VERSION}.dmg "dist/"
+          echo "::set-output name=status::success"
+          
+      - name: SSH connection to Actions
+        uses: P3TERX/ssh2actions@v1.0.0
+        if: github.event.inputs.ssh_darwin == 'true'
+        env:
+          TELEGRAM_CHAT_ID: ${{secrets.TELEGRAM_CHAT_ID}}
+          TELEGRAM_BOT_TOKEN: ${{secrets.TELEGRAM_BOT_TOKEN}}
+          
+      - name: Upload dist
+        uses: actions/upload-artifact@v2
+        if: steps.compile.outputs.status == 'success'
+        with:
+          name: ${{env.DIST_DMG}}
+          path: ${{env.DIST_DMG}}
