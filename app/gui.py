@@ -30,6 +30,18 @@ def get_base_path(path='.'):
 
 
 script_path = get_base_path('assets/config.lua')
+xml_path = get_base_path('xml/')
+
+
+def load_xml(name):
+    try:
+        with open(xml_path+name, encoding="utf-8") as f:
+            xml = f.read()
+    except Exception as e:
+        xml = ''
+    return xml
+
+
 if platform is Platform.Darwin:
     icon_path = get_base_path('assets/icon.png')
 else:
@@ -46,6 +58,9 @@ if platform is Platform.Darwin:
 
         @rumps.clicked("Quit")
         def Quit(self, _):
+            self.quit()
+
+        def quit(self):
             rumps.quit_application()
 
         def start_live(self):
@@ -59,17 +74,19 @@ else:
         def __init__(self):
             image = Image.open(icon_path)
             self.app = Icon('Live', icon=image,
-                            menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit_live)))
+                            menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit)))
 
         def start_live(self, icon, item):
             pass
+
+        def quit(self):
+            self.quit_live()
 
         def quit_live(self):
             self.app.stop()
 
         def start(self):
             self.app.run()
-
 
 if __name__ == "__main__":
     print('gui main')
