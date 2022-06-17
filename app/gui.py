@@ -29,19 +29,6 @@ def get_base_path(path='.'):
     return b
 
 
-script_path = get_base_path('assets/config.lua')
-xml_path = get_base_path('xml/')
-
-
-def load_xml(name):
-    try:
-        with open(xml_path+name, encoding="utf-8") as f:
-            xml = f.read()
-    except Exception as e:
-        xml = ''
-    return xml
-
-
 if platform is Platform.Darwin:
     icon_path = get_base_path('assets/icon.png')
 else:

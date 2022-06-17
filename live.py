@@ -2,16 +2,19 @@ import subprocess
 import threading
 
 import requests
-import json
-from pyquery import PyQuery
 from app.gui import *
-from app.server import Service
 
 LIVE_PATH = os.path.join('live.m3u8')
+SCRIPT_PATH = os.path.join('config.lua')
 
 if not os.path.exists(LIVE_PATH):
-    r = requests.get('http://notag.cn/live/live.m3u8')
+    r = requests.get('https://notag.cn/live/live.m3u8')
     with open(LIVE_PATH, 'wb') as f:
+        f.write(r.content)
+
+if not os.path.exists(SCRIPT_PATH):
+    r = requests.get('https://notag.cn/live/config.lua')
+    with open(SCRIPT_PATH, 'wb') as f:
         f.write(r.content)
 
 
@@ -37,9 +40,7 @@ class LiveApp(App):
         super(LiveApp, self).__init__()
         self.mpv_thread = None
         self.mpvsocket = '/tmp/mpvsocket'
-        self.service = Service()
         # self.start_live()
-        self.service.start()
 
     def start_live(self):
         if self.mpv_thread is None or self.mpv_thread.is_alive() is False:
@@ -57,7 +58,7 @@ class LiveApp(App):
             '--hwdec=yes'
             '--force-window=yes',
             '--osc=no',
-            '--script=' + script_path,
+            '--script=' + SCRIPT_PATH,
             '--stop-playback-on-init-failure=yes'
         ]
         spc = subprocess.Popen(params)
@@ -65,11 +66,4 @@ class LiveApp(App):
 
 
 if __name__ == '__main__':
-    # search = 'abc'
-    # url = "https://www.btnull.org/s/1---1/"+search+".html"
-    # resp = requests.get(url)
-    # doc = PyQuery(resp.content)
-    # items = doc('a').items()
-    # for item in items:
-    #     print(item.attr('href'))
     LiveApp().start()
