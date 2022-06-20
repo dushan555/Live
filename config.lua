@@ -36,8 +36,14 @@ local curr_key = ''
 function key_event(key)
     if key == 'ENTER' and last_key ~= '' and last_key ~= curr_key
     then
-        mp.osd_message('play '..last_key)
-        mp.commandv('playlist-play-index',last_key)
+        
+        local count = mp.get_property('playlist-count')
+        if last_key < count then
+            mp.osd_message('play '..last_key)
+            mp.commandv('playlist-play-index',last_key)
+        else
+            mp.osd_message('Playlist 0-'..count-1)
+        end
         curr_key=last_key
         last_key=''
     end

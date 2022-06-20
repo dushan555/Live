@@ -75,7 +75,6 @@ else:
             image = Image.open(icon_path)
             self.app = Icon('Live', icon=image,
                             menu=Menu(MenuItem('UpdateConfig', self.updateConfig),
-                                      None,
                                       MenuItem('Start', self.start_live),
                                       MenuItem('Quit', self.quit)))
 
