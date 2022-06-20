@@ -37,7 +37,15 @@ else:
 if platform is Platform.Darwin:
     class App(rumps.App):
         def __init__(self):
-            super(App, self).__init__('Live', icon=icon_path, quit_button=None)
+            super(App, self).__init__('Live', icon=icon_path, quit_button=None, menu=[{'Update': ['UpdateConfig']},
+                                                                                      None,
+                                                                                      'Start',
+                                                                                      'Quit'
+                                                                                      ])
+
+        @rumps.clicked("Update", "UpdateConfig")
+        def UpdateConfig(self, _):
+            self.updateConfig()
 
         @rumps.clicked("Start")
         def Start(self, _):
@@ -56,12 +64,20 @@ if platform is Platform.Darwin:
         def start(self):
             super(App, self).run()
 
+        def updatePlaylist(self):
+            pass
+
+        def updateConfig(self):
+            pass
 else:
     class App:
         def __init__(self):
             image = Image.open(icon_path)
             self.app = Icon('Live', icon=image,
-                            menu=Menu(MenuItem('Start', self.start_live), MenuItem('Quit', self.quit)))
+                            menu=Menu(MenuItem('UpdateConfig', self.updateConfig),
+                                      None,
+                                      MenuItem('Start', self.start_live),
+                                      MenuItem('Quit', self.quit)))
 
         def start_live(self, icon, item):
             pass
@@ -74,6 +90,12 @@ else:
 
         def start(self):
             self.app.run()
+
+        def updatePlaylist(self):
+            pass
+
+        def updateConfig(self):
+            pass
 
 if __name__ == "__main__":
     print('gui main')
