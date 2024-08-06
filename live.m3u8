@@ -1,12 +1,12 @@
 #EXTM3U
-#EXTINF:-1 ,1905直播
-https://hlslive.1905.com/live/LIVE8J4LTCXPI7QJ5/index.m3u8?tm=1655892301&sign=e5d035841d9e0f399bc8d6da9192e2d4
-#EXTINF:-1 ,CCTV6电视直播
-https://hlslive.1905.com/live/LIVEQYR8M567KGOXO/index.m3u8?tm=1656476945&sign=22df3400d8a629d389bd7021d7e1ae6c
-#EXTINF:-1 ,1905直播-周播片场
-https://hlslive.1905.com/live/LIVEW8BTI19GD78H9/index.m3u8?tm=1655881501&sign=fb0e47a6b9edab1f334c9483dafb7869
-#EXTINF:-1 ,NewTV中国功夫
-http://39.134.66.66/PLTV/88888888/224/3221225604/index.m3u8
+#EXTINF:-1 ,重温经典
+http://ali.hlspull.yximgs.com/live/awei_cwjd.flv
+#EXTINF:-1 ,轮播电影
+http://tc-tct.douyucdn2.cn/dyliveflv1/122402rK7MO9bXSq_2000.flv?wsAuth=8cea39337984fd3341cc9ec569502e4f&token=cpn-androidmpro-0-122402-0fcea45d2300cfa0ac75fafd8679bb53af10de8c33ae99d9&logo=0&expire=0&did=d010b07dcb997ada9934081c873542f0&origin=tct&vhost=p
+#EXTINF:-1 ,CHC高清电影
+http://58.19.38.162:9901/tsfile/live/1038_1.m3u8
+#EXTINF:-1 ,经典戏剧频道
+http://live.dxms.top:80/dwy/jdxj.php
 #EXTINF:-1 tvg-id="" status="online",NewTV明星大片 (1080p)
 http://39.134.66.66/PLTV/88888888/224/3221225550/index.m3u8
 #EXTINF:-1 tvg-id="" status="online",NewTV潮妈辣婆 (1080p)
